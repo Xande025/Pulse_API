@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model Marca {
+  id       Int       @id @default(autoincrement())
+  nome     String    @db.VarChar(30)
+  produtos Produto[]
+
+  @@map("marcas")
+}
+
+model Produto {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(50)
+  categoria String   @db.VarChar(30)
+  descricao String?
+  preco     Decimal  @db.Decimal(10, 2)
+  estoque   Int
+  imagem    String
+  destaque  Boolean  @default(false)
+  marcaId   Int
+  adminId   String?  @db.VarChar(36)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  marca     Marca    @relation(fields: [marcaId], references: [id])
+  admin     Admin?   @relation(fields: [adminId], references: [id])
+  imagens   Imagem[] @relation("ProdutoToImagem")
+  comentarios Comentario[]
+  @@map("produtos")
+}
+
+
+model Imagem {
+  id          Int       @id @default(autoincrement())
+  descricao   String    @db.VarChar(30)
+  url         String    @db.VarChar(255)
+  produto     Produto   @relation("ProdutoToImagem", fields: [produtoId], references: [id])
+  produtoId   Int
+  @@map("imagens")
+}
+
+
+model Cliente {
+  id            String   @db.VarChar(36) @id @default(uuid())
+  nome          String   @db.VarChar(60)
+  email         String   @unique @db.VarChar(40)
+  senha         String   @db.VarChar(60)   // senha deve ser varchar(60)
+  recoveryCode  String?  @db.VarChar(10)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt  
+  comentarios   Comentario[]
+  @@map("clientes")
+}
+
+model Comentario {
+  id          Int       @id @default(autoincrement())
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+  clienteId   String    @db.VarChar(36)
+  produto     Produto   @relation(fields: [produtoId], references: [id])
+  produtoId   Int
+  texto       String    @db.VarChar(255)
+  resposta    String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  admin       Admin?    @relation(fields: [adminId], references: [id])
+  adminId     String?   @db.VarChar(36)
+  @@map("comentarios")
+}
+
+model Admin {
+  id            String       @db.VarChar(36) @id @default(uuid())
+  nome          String       @db.VarChar(60)
+  email         String       @unique @db.VarChar(40)
+  senha         String       @db.VarChar(60)   // senha deve ser varchar(60)
+  nivel         Int          @db.SmallInt @default(2)  // 1=Super Admin, 2=Admin, 3=Moderador
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt  
+  produtos      Produto[]    // Admin pode cadastrar produtos
+  comentarios   Comentario[] // Admin pode responder comentários
+  @@map("admins")
+}
