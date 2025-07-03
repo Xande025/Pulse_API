@@ -34,20 +34,24 @@ router.post("/", async (req, res) => {
     if (bcrypt.compareSync(senha, admin.senha)) {
       // se confere, gera e retorna o token
       const token = jwt.sign({
-        adminLogadoId: admin.id,
-        adminLogadoNome: admin.nome,
-        adminLogadoNivel: admin.nivel
+        id: admin.id,
+        nome: admin.nome,
+        email: admin.email,
+        nivel: admin.nivel
       },
         process.env.JWT_KEY as string,
         { expiresIn: "1h" }
       )
 
       res.status(200).json({
-        id: admin.id,
-        nome: admin.nome,
-        email: admin.email,
-        nivel: admin.nivel,
-        token
+        mensagem: "Login realizado com sucesso",
+        token,
+        admin: {
+          id: admin.id,
+          nome: admin.nome,
+          email: admin.email,
+          nivel: admin.nivel
+        }
       })
     } else {
       res.status(400).json({ erro: mensaPadrao })
